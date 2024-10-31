@@ -11,12 +11,26 @@ import { users } from "@/db/schema";
 import { createSession, generateSessionToken } from "@/lib/auth/session";
 import { setSessionTokenCookie } from "@/lib/auth/cookies";
 
+import getIp from "@/lib/get-ip";
+import { TokenBucket } from "@/lib/rate-limiting/Token-bucket";
+
+const ipBucket = new TokenBucket(3, 60);
+
 export async function registerAction(
   values: z.infer<typeof RegisterSchema>,
 ): Promise<{
   status: "error" | "success";
   message: string;
 }> {
+  const clientIp = await getIp();
+  if (clientIp !== null && !ipBucket.consume(clientIp, 1)) {
+    return {
+      status: "error",
+      message:
+        "Too many registration attempts. Please wait a while before trying again",
+    };
+  }
+
   try {
     RegisterSchema.parse(values);
   } catch (error) {

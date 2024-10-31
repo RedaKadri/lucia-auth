@@ -10,6 +10,10 @@ import { eq } from "drizzle-orm";
 import { createSession, generateSessionToken } from "@/lib/auth/session";
 import { setSessionTokenCookie } from "@/lib/auth/cookies";
 
+import { Throttler } from "@/lib/rate-limiting/throttling";
+
+const throttler = new Throttler<string>([1, 2, 4, 8, 16, 30, 60, 180, 300]);
+
 export async function loginAction(
   values: z.infer<typeof LoginSchema>,
 ): Promise<{
@@ -40,6 +44,13 @@ export async function loginAction(
     };
   }
 
+  if (!throttler.consume(result.user.id)) {
+    return {
+      status: "error",
+      message: "Too many login attempts. Please try again later",
+    };
+  }
+
   const isValidPassword = await Bun.password.verify(
     values.password,
     result.user.password,
@@ -50,6 +61,8 @@ export async function loginAction(
       message: "Incorrect username or password",
     };
   }
+
+  throttler.reset(result.user.id);
 
   const sessionToken = generateSessionToken();
   const session = await createSession(sessionToken, result.user.id);
