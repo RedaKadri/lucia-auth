@@ -23,6 +23,7 @@ import Link from "next/link";
 import { toast } from "sonner";
 import { loginAction } from "../action";
 import { cn } from "@/lib/utils";
+import GoogleIcon from "@/components/icons/google-icon";
 
 const LoginForm = () => {
   const router = useRouter();
@@ -105,6 +106,18 @@ const LoginForm = () => {
           >
             <GitHubIcon />
             GitHub
+          </Link>
+          <Link
+            href="/api/login/google"
+            className={cn(
+              buttonVariants({
+                variant: "outline",
+              }),
+              "w-full",
+            )}
+          >
+            <GoogleIcon />
+            Google
           </Link>
         </div>
         <div className="mt-4 text-center text-sm">

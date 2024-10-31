@@ -5,7 +5,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export default async function Home() {
   const { user } = await getCurrentSession();
-  console.log(user);
   if (!user) {
     redirect("/login");
   }

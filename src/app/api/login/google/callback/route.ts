@@ -1,11 +1,11 @@
 import { cookies } from "next/headers";
 
-import { generateSessionToken, createSession } from "@/lib/auth/session";
-import { setSessionTokenCookie } from "@/lib/auth/cookies";
-import { github } from "@/lib/auth/oauth";
+import { decodeIdToken, OAuth2RequestError, type OAuth2Tokens } from "arctic";
+import { google } from "@/lib/auth/oauth";
+import { GoogleType } from "@/types";
 
-import { OAuth2RequestError, type OAuth2Tokens } from "arctic";
-import { GitHubType } from "@/types";
+import { createSession, generateSessionToken } from "@/lib/auth/session";
+import { setSessionTokenCookie } from "@/lib/auth/cookies";
 
 import db from "@/db";
 import { users } from "@/db/schema";
@@ -18,8 +18,14 @@ export async function GET(request: Request): Promise<Response> {
   const code = url.searchParams.get("code");
   const state = url.searchParams.get("state");
   const cookieStore = await cookies();
-  const storedState = cookieStore.get("github_oauth_state")?.value ?? null;
-  if (code === null || state === null || storedState === null) {
+  const storedState = cookieStore.get("google_oauth_state")?.value ?? null;
+  const codeVerifier = cookieStore.get("google_code_verifier")?.value ?? null;
+  if (
+    code === null ||
+    state === null ||
+    storedState === null ||
+    codeVerifier === null
+  ) {
     return new Response("Please restart the process.", {
       status: 400,
     });
@@ -32,7 +38,7 @@ export async function GET(request: Request): Promise<Response> {
 
   let tokens: OAuth2Tokens;
   try {
-    tokens = await github.validateAuthorizationCode(code);
+    tokens = await google.validateAuthorizationCode(code, codeVerifier);
   } catch (e) {
     if (e instanceof OAuth2RequestError) {
       return new Response("Please restart the process.", {
@@ -44,17 +50,12 @@ export async function GET(request: Request): Promise<Response> {
     });
   }
 
-  const githubUserResponse = await fetch("https://api.github.com/user", {
-    headers: {
-      Authorization: `Bearer ${tokens.accessToken()}`,
-    },
-  });
-  const githubUser: GitHubType = await githubUserResponse.json();
+  const googleUser = decodeIdToken(tokens.idToken()) as GoogleType;
 
   const [existingUser] = await db
     .select({ id: users.id, name: users.name, oauth: users.oauth })
     .from(users)
-    .where(sql`json_extract(oauth, '$.id') = ${githubUser.id}`);
+    .where(sql`json_extract(oauth, '$.id') = ${googleUser.sub}`);
   if (existingUser && existingUser.oauth !== null) {
     const sessionToken = generateSessionToken();
     const session = await createSession(sessionToken, existingUser.id);
@@ -70,16 +71,15 @@ export async function GET(request: Request): Promise<Response> {
   const userId = createId();
   await db.insert(users).values({
     id: userId,
-    name: githubUser.login,
+    name: googleUser.name,
     password: null,
     oauth: {
-      provider: "github",
-      id: githubUser.id,
-      email: githubUser.email ?? null,
-      avatar_url: githubUser.avatar_url,
+      provider: "google",
+      id: googleUser.sub,
+      email: googleUser.email,
+      avatar_url: googleUser.picture ?? null,
     },
   });
-
   const sessionToken = generateSessionToken();
   const session = await createSession(sessionToken, userId);
   await setSessionTokenCookie(sessionToken, session.expiresAt);
