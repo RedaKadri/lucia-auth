@@ -37,7 +37,7 @@ export async function loginAction(
     .select({ user: users })
     .from(users)
     .where(eq(users.name, values.username));
-  if (!result) {
+  if (!result || !result.user.password) {
     return {
       status: "error",
       message: "Incorrect username or password",

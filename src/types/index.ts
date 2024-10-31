@@ -21,3 +21,10 @@ export const LoginSchema = z.object({
     .string()
     .min(8, { message: "Password must be at least 8 characters long" }),
 });
+
+export type GitHubType = {
+  login: string;
+  id: number;
+  avatar_url: string;
+  email?: string;
+};

@@ -4,7 +4,8 @@ import { int, sqliteTable, text } from "drizzle-orm/sqlite-core";
 export const users = sqliteTable("user", {
   id: text("id").primaryKey(),
   name: text("name").notNull().unique(),
-  password: text("password").notNull(),
+  password: text("password"),
+  oauth: text("oauth", { mode: "json" }).$type<OAuth>(),
 });
 
 export const sessions = sqliteTable("session", {
@@ -16,6 +17,13 @@ export const sessions = sqliteTable("session", {
     mode: "timestamp",
   }).notNull(),
 });
+
+type OAuth = {
+  provider: "google" | "github";
+  id: string | number;
+  email: string | null;
+  avatar_url: string | null;
+};
 
 export type User = InferSelectModel<typeof users>;
 export type Session = InferSelectModel<typeof sessions>;

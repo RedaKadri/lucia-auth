@@ -1,17 +1,24 @@
 import { getCurrentSession } from "@/lib/auth";
 import { redirect } from "next/navigation";
 
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+
 export default async function Home() {
   const { user } = await getCurrentSession();
+  console.log(user);
   if (!user) {
     redirect("/login");
   }
 
   return (
-    <main className="flex h-[80vh] items-center justify-center">
-      <h1 className="scroll-m-20 text-4xl font-extrabold tracking-tight lg:text-5xl">
-        Welcome {user?.name}
-      </h1>
+    <main className="flex h-[80vh] items-center justify-center gap-3">
+      <Avatar>
+        <AvatarImage src={user.oauth?.avatar_url || undefined} alt="@shadcn" />
+        <AvatarFallback>{user.name}</AvatarFallback>
+      </Avatar>
+      <h3 className="scroll-m-20 text-2xl font-semibold tracking-tight">
+        {user?.name}
+      </h3>
     </main>
   );
 }
