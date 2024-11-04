@@ -13,3 +13,6 @@ bun --bun dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+
+> [!NOTE]
+> for email and password example switch to the [other branch](https://github.com/RedaKadri/lucia-auth/tree/email-password)
