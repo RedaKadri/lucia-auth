@@ -36,11 +36,11 @@ export async function loginAction(
   const [result] = await db
     .select({ user: users })
     .from(users)
-    .where(eq(users.name, values.username));
+    .where(eq(users.email, values.email));
   if (!result || !result.user.password) {
     return {
       status: "error",
-      message: "Incorrect username or password",
+      message: "Incorrect email or password",
     };
   }
 
@@ -58,7 +58,7 @@ export async function loginAction(
   if (!isValidPassword) {
     return {
       status: "error",
-      message: "Incorrect username or password",
+      message: "Incorrect email or password",
     };
   }
 

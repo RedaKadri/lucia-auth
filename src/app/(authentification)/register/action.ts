@@ -14,6 +14,12 @@ import { setSessionTokenCookie } from "@/lib/auth/cookies";
 import getIp from "@/lib/get-ip";
 import { TokenBucket } from "@/lib/rate-limiting/Token-bucket";
 
+import {
+  createEmailVerificationRequest,
+  sendVerificationEmail,
+  setEmailVerificationRequestCookie,
+} from "@/lib/email-verification";
+
 const ipBucket = new TokenBucket(3, 60);
 
 export async function registerAction(
@@ -50,9 +56,22 @@ export async function registerAction(
   try {
     await db.insert(users).values({
       id: userId,
-      name: values.username,
+      email: values.email,
+      name: values.email.slice(0, values.email.indexOf("@")),
       password: hashPassword,
     });
+
+    const emailVerificationRequest = await createEmailVerificationRequest(
+      userId,
+      values.email,
+    );
+    if (emailVerificationRequest.email && emailVerificationRequest.code) {
+      sendVerificationEmail(
+        emailVerificationRequest.email,
+        emailVerificationRequest.code,
+      );
+    }
+    await setEmailVerificationRequestCookie(emailVerificationRequest);
 
     const sessionToken = generateSessionToken();
     const session = await createSession(sessionToken, userId);

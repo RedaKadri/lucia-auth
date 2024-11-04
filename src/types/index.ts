@@ -2,7 +2,7 @@ import { z } from "zod";
 
 export const RegisterSchema = z
   .object({
-    username: z.string().min(2).max(50),
+    email: z.string().email({ message: "Not a valide email formate" }),
     password: z
       .string()
       .min(8, { message: "Password must be at least 8 characters long" }),
@@ -16,10 +16,14 @@ export const RegisterSchema = z
   });
 
 export const LoginSchema = z.object({
-  username: z.string().min(2).max(50),
+  email: z.string().email({ message: "Not a valide email formate" }),
   password: z
     .string()
     .min(8, { message: "Password must be at least 8 characters long" }),
+});
+
+export const EmailVerificationSchema = z.object({
+  code: z.string().length(8, { message: "Code is 8 characters long" }),
 });
 
 export type GitHubType = {

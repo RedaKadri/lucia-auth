@@ -5,9 +5,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export default async function Home() {
   const { user } = await getCurrentSession();
-  if (!user) {
-    redirect("/login");
-  }
+  if (!user) redirect("/login");
+  if (!user.emailVerified) redirect("/email-verification");
 
   return (
     <main className="flex h-[80vh] items-center justify-center gap-3">

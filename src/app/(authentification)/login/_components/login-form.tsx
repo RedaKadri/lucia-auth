@@ -31,7 +31,7 @@ const LoginForm = () => {
   const form = useForm<z.infer<typeof LoginSchema>>({
     resolver: zodResolver(LoginSchema),
     defaultValues: {
-      username: "",
+      email: "",
       password: "",
     },
   });
@@ -56,12 +56,12 @@ const LoginForm = () => {
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <FormField
           control={form.control}
-          name="username"
+          name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Username</FormLabel>
+              <FormLabel>Email</FormLabel>
               <FormControl>
-                <Input placeholder="admin" {...field} />
+                <Input placeholder="user@email.com" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -83,7 +83,7 @@ const LoginForm = () => {
         <div className="flex flex-col gap-3">
           <Button type="submit" disabled={form.formState.isSubmitting}>
             {form.formState.isSubmitting && <RingResizeSpinner />}
-            <span>Log in with username</span>
+            <span>Log in with email</span>
           </Button>
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
